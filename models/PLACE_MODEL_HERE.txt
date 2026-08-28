@@ -1,0 +1,8 @@
+ضعي ملف best_model_efficientnet.h5 (المُنزَّل من دفتر Colab) في هذا المجلد بالضبط.
+
+المسار الكامل المتوقع:
+skin_cancer_project/models/best_model_efficientnet.h5
+
+بعد وضع الملف، شغّلي بالترتيب:
+1. python database/register_model_version.py   (مرة واحدة فقط - يسجّل النموذج بقاعدة البيانات)
+2. streamlit run app.py                          (لتشغيل الواجهة بالتنبؤ الحقيقي)
