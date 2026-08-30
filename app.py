@@ -22,6 +22,9 @@ register_model_module = import_module("register_model_version")
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "database", "skin_cancer.db")
 
+# st.set_page_config يجب أن يكون أول أمر Streamlit يُنفَّذ بالسكربت بالكامل
+st.set_page_config(page_title="تشخيص سرطان الجلد المبكر", layout="centered")
+
 
 @st.cache_resource
 def ensure_db_ready():
@@ -58,8 +61,6 @@ CLASS_NAMES_AR = {
 }
 RISK_LABEL_AR = {"low": "منخفضة", "medium": "متوسطة", "high": "مرتفعة"}
 RISK_COLOR = {"low": "success", "medium": "warning", "high": "error"}
-
-st.set_page_config(page_title="تشخيص سرطان الجلد المبكر", layout="centered")
 
 # دعم واجهة من اليمين لليسار (RTL) للعربية
 st.markdown(
