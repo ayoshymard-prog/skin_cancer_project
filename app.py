@@ -49,7 +49,148 @@ def ensure_db_ready():
 
 ensure_db_ready()
 
-# أسماء عرض عربية لفئات HAM10000 السبع
+# ================== نظام التصميم ==================
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+    :root {
+        --ink: #0B2740;
+        --teal: #028090;
+        --seafoam: #00A896;
+        --mint: #02C39A;
+        --amber: #C98A2E;
+        --clay: #B23A32;
+        --bg: #F5F9F8;
+        --card: #FFFFFF;
+        --muted: #5B7280;
+        --border: #E1E8E6;
+    }
+
+    html, body, .stApp {
+        direction: rtl;
+        text-align: right;
+        background: var(--bg);
+        font-family: 'IBM Plex Sans Arabic', sans-serif;
+        color: var(--ink);
+    }
+    h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+        font-family: 'IBM Plex Sans Arabic', sans-serif;
+        font-weight: 700;
+        color: var(--ink);
+    }
+    code, .stCaption, [data-testid="stMetricValue"] {
+        font-family: 'IBM Plex Mono', monospace !important;
+    }
+
+    /* شريط العنوان */
+    .clinic-header {
+        background: linear-gradient(135deg, var(--ink) 0%, #123A5C 100%);
+        border-radius: 16px;
+        padding: 28px 32px;
+        margin-bottom: 28px;
+        box-shadow: 0 4px 18px rgba(11,39,64,0.18);
+    }
+    .clinic-header h1 {
+        color: #FFFFFF !important;
+        font-size: 26px;
+        margin: 0 0 6px 0;
+    }
+    .clinic-header p {
+        color: #BFE3DE;
+        margin: 0;
+        font-size: 14px;
+    }
+    .clinic-header .eyebrow {
+        display: inline-block;
+        background: var(--teal);
+        color: white;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
+    }
+
+    /* تبويبات على شكل كبسولات */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 6px;
+        background: var(--card);
+        padding: 6px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 10px;
+        padding: 8px 18px;
+        font-weight: 600;
+        color: var(--muted);
+    }
+    .stTabs [aria-selected="true"] {
+        background: var(--ink) !important;
+        color: white !important;
+    }
+
+    /* الأزرار */
+    .stButton > button {
+        background: var(--ink);
+        color: white;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        padding: 0.5rem 1.2rem;
+        transition: background 0.15s ease;
+    }
+    .stButton > button:hover {
+        background: var(--teal);
+        color: white;
+    }
+
+    /* بطاقات المؤشرات */
+    [data-testid="stMetric"] {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 16px;
+    }
+    [data-testid="stMetricLabel"] { color: var(--muted); }
+
+    /* منطقة رفع الملفات */
+    [data-testid="stFileUploaderDropzone"] {
+        border-radius: 12px;
+        border: 1.5px dashed var(--teal) !important;
+        background: #F0F8F7;
+    }
+
+    /* تنبيهات */
+    [data-testid="stAlert"] { border-radius: 12px; }
+
+    /* بطاقة نتيجة التشخيص المخصصة */
+    .result-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        margin-top: 12px;
+        box-shadow: 0 2px 12px rgba(11,39,64,0.06);
+    }
+    .risk-badge {
+        display: inline-block;
+        padding: 5px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        color: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+RISK_HEX = {"low": "#02C39A", "medium": "#C98A2E", "high": "#B23A32"}
+RISK_LABEL_AR = {"low": "منخفضة", "medium": "متوسطة", "high": "مرتفعة"}
 CLASS_NAMES_AR = {
     "akiec": "توسّف شعاعي (قبل سرطاني)",
     "bcc":   "سرطان الخلايا القاعدية",
@@ -59,23 +200,48 @@ CLASS_NAMES_AR = {
     "nv":    "شامة عادية (حميدة)",
     "vasc":  "آفة وعائية",
 }
-RISK_LABEL_AR = {"low": "منخفضة", "medium": "متوسطة", "high": "مرتفعة"}
-RISK_COLOR = {"low": "success", "medium": "warning", "high": "error"}
 
-# دعم واجهة من اليمين لليسار (RTL) للعربية
+
+def render_gauge_card(confidence: float, risk: str, class_name_ar: str, code: str) -> str:
+    """يبني بطاقة نتيجة بقرص قياس دائري (SVG) بلون يعكس مستوى الخطورة."""
+    pct = confidence * 100
+    color = RISK_HEX[risk]
+    circumference = 2 * 3.14159 * 54
+    offset = circumference * (1 - confidence)
+    return f"""
+    <div class="result-card">
+      <div style="display:flex; align-items:center; gap:28px; flex-wrap:wrap; justify-content:center;">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="54" fill="none" stroke="#E1E8E6" stroke-width="12"/>
+          <circle cx="70" cy="70" r="54" fill="none" stroke="{color}" stroke-width="12"
+                  stroke-linecap="round" stroke-dasharray="{circumference:.1f}"
+                  stroke-dashoffset="{offset:.1f}"
+                  transform="rotate(-90 70 70)"/>
+          <text x="70" y="65" text-anchor="middle" font-family="IBM Plex Mono, monospace"
+                font-size="24" font-weight="600" fill="{color}">{pct:.1f}%</text>
+          <text x="70" y="85" text-anchor="middle" font-family="IBM Plex Mono, monospace"
+                font-size="10" fill="#5B7280">CONFIDENCE</text>
+        </svg>
+        <div style="text-align:center; min-width:180px;">
+          <div style="font-size:20px; font-weight:700; color:var(--ink); margin-bottom:4px;">{class_name_ar}</div>
+          <div style="font-family:'IBM Plex Mono',monospace; color:#5B7280; font-size:13px; margin-bottom:12px;">{code}</div>
+          <span class="risk-badge" style="background:{color};">مستوى الخطورة: {RISK_LABEL_AR[risk]}</span>
+        </div>
+      </div>
+    </div>
+    """
+
+
 st.markdown(
     """
-    <style>
-    body, .stApp { direction: rtl; text-align: right; }
-    </style>
+    <div class="clinic-header">
+        <span class="eyebrow">مشروع تخرج — ذكاء صنعي</span>
+        <h1>🩺 برنامج تشخيص مرض سرطان الجلد بشكل مبكر</h1>
+        <p>سلمى محمد عيسى · إشراف د. محمد حجوز</p>
+    </div>
     """,
     unsafe_allow_html=True,
 )
-
-st.title("🩺 برنامج تشخيص مرض سرطان الجلد بشكل مبكر")
-st.caption("مشروع تخرج - سلمى محمد عيسى | إشراف: د. محمد حجوز")
-
-st.divider()
 
 tab1, tab2, tab3, tab4 = st.tabs(
     ["تشخيص صورة جديدة", "سجل المرضى", "لوحة إحصائيات", "عن المشروع"]
@@ -164,12 +330,12 @@ with tab1:
                         risk = result["risk_level"]
                         st.divider()
                         st.subheader("نتيجة التحليل")
-                        col1, col2 = st.columns(2)
-                        col1.metric("التصنيف", CLASS_NAMES_AR[cls])
-                        col2.metric("نسبة الثقة", f"{result['confidence_score']*100:.1f}%")
 
-                        getattr(st, RISK_COLOR[risk])(
-                            f"مستوى الخطورة: **{RISK_LABEL_AR[risk]}**"
+                        st.markdown(
+                            render_gauge_card(
+                                result["confidence_score"], risk, CLASS_NAMES_AR[cls], cls
+                            ),
+                            unsafe_allow_html=True,
                         )
 
                         with st.expander("عرض احتمالات كل الفئات"):
