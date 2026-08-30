@@ -13,10 +13,38 @@ import tempfile
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "database"))
 from importlib import import_module
 predict_module = import_module("04_predict")
+create_db_module = import_module("create_db")
+seed_data_module = import_module("seed_data")
+register_model_module = import_module("register_model_version")
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "database", "skin_cancer.db")
+
+
+@st.cache_resource
+def ensure_db_ready():
+    """
+    تتأكد من وجود الجداول وتنشئها تلقائياً إذا لم تكن موجودة (مهم لبيئات
+    سحابية مثل Streamlit Cloud حيث لا يُرفَع ملف قاعدة البيانات نفسه على
+    Git). @st.cache_resource يضمن تنفيذها مرة واحدة فقط طوال عمر الجلسة،
+    وليس مع كل إعادة تشغيل للسكربت.
+    """
+    create_db_module.create_database()
+
+    conn = sqlite3.connect(DB_PATH)
+    patients_count = conn.execute("SELECT COUNT(*) FROM patients").fetchone()[0]
+    conn.close()
+
+    if patients_count == 0:
+        seed_data_module.seed()
+
+    register_model_module.register()
+    return True
+
+
+ensure_db_ready()
 
 # أسماء عرض عربية لفئات HAM10000 السبع
 CLASS_NAMES_AR = {
