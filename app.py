@@ -237,7 +237,8 @@ st.markdown(
     <div class="clinic-header">
         <span class="eyebrow">مشروع تخرج — ذكاء صنعي</span>
         <h1>🩺 برنامج تشخيص مرض سرطان الجلد بشكل مبكر</h1>
-        <p>سلمى محمد عيسى · إشراف د. محمد حجوز</p>
+        <p style="margin-bottom:2px;"><b>الطالبة:</b> سلمى محمد عيسى</p>
+        <p><b>الإشراف:</b> د. محمد حجوز</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -283,13 +284,19 @@ with tab1:
 
     body_location = st.text_input("موقع الآفة على الجسم (مثال: الظهر، الذراع)")
 
-    uploaded_file = st.file_uploader(
-        "اختر صورة الآفة الجلدية", type=["jpg", "jpeg", "png"]
-    )
+    upload_card = st.container(border=True)
+    with upload_card:
+        st.markdown("**📷 صورة الآفة الجلدية**")
+        uploaded_file = st.file_uploader(
+            "اختر صورة الآفة الجلدية", type=["jpg", "jpeg", "png"],
+            label_visibility="collapsed",
+        )
+        if uploaded_file is not None:
+            col_img, col_space = st.columns([1, 2])
+            with col_img:
+                st.image(uploaded_file, caption="معاينة الصورة المرفوعة", width=220)
 
     if uploaded_file is not None:
-        st.image(uploaded_file, caption="الصورة المرفوعة", width=300)
-
         if st.button("تشغيل التحليل", type="primary"):
             if patient_id is None:
                 st.error("الرجاء اختيار مريض أو تسجيل مريض جديد أولاً.")
